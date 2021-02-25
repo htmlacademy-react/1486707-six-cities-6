@@ -1,48 +1,51 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
 import leaflet from 'leaflet';
 import PropTypes from 'prop-types';
+import "leaflet/dist/leaflet.css";
 
 const Map = ({city, points}) => {
-
-  const icon = leaflet.icon({
-    iconUrl: `img/pin.svg`,
-    iconSize: [30, 30]
-  });
-
   const zoom = 12;
 
+  const mapRef = useRef();
+
   useEffect(() => {
-    const map = leaflet.map(`map`, {
-      center: city,
-      zoom,
-      zoomControl: false,
-      marker: true
+    const icon = leaflet.icon({
+      iconUrl: `img/pin.svg`,
+      iconSize: [30, 30]
     });
-    map.setView(city, zoom);
+
+    mapRef.current = leaflet.map(`map`, {
+      center: city,
+      zoom
+    });
+    mapRef.current.setView(city, zoom);
 
     leaflet
       .tileLayer(`https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png`, {
         attribution: `&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>`
       })
-      .addTo(map);
+      .addTo(mapRef.current);
 
     points.forEach((point) => {
-
       leaflet.marker({
         lat: point.latitude,
         lng: point.longitude,
-        zoom: point.zoom
       },
       {
         icon
       })
-      .addTo(map);
+      .addTo(mapRef.current);
 
     });
-  }, []);
+
+    return () => {
+      mapRef.current.remove();
+    };
+
+  }, [city]);
 
   return (
-    <div id="map"></div>
+    <div id="map" style={{height: `100%`}} ref={mapRef}></div>
   );
 };
 
